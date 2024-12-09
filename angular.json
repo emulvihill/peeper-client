@@ -68,10 +68,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "SnapCrap:build:production"
+              "buildTarget": "SnapCrap:build:production"
             },
             "development": {
-              "browserTarget": "SnapCrap:build:development"
+              "buildTarget": "SnapCrap:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -79,7 +79,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "SnapCrap:build"
+            "buildTarget": "SnapCrap:build"
           }
         },
         "test": {
