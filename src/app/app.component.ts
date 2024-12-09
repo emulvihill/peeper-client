@@ -1,10 +1,10 @@
-import {AfterViewChecked, Component} from '@angular/core';
+import { AfterViewChecked, Component } from '@angular/core';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    standalone: false
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+  standalone: false
 })
 export class AppComponent implements AfterViewChecked {
   title = 'Peeper';
@@ -34,7 +34,7 @@ export class AppComponent implements AfterViewChecked {
   AppComponent() {
 
 
-// show an error if not supported
+    // show an error if not supported
     if (typeof OffscreenCanvas === "undefined") {
       const supportError = "OffscreenCanvas is not supported by your browser";
       const errorSpan: HTMLElement = document.querySelector("span.error")!;
@@ -57,7 +57,7 @@ export class AppComponent implements AfterViewChecked {
 
     this.startBtn.disabled = true;
 
-    this.stream = await navigator.mediaDevices.getUserMedia({video: true});
+    this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
     this.videoElem.onplaying = () =>
       console.log("video playing this.stream:", this.videoElem!.srcObject);
     this.videoElem.srcObject = this.stream;
