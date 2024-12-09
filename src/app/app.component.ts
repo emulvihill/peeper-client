@@ -1,12 +1,13 @@
 import {AfterViewChecked, Component} from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    standalone: false
 })
 export class AppComponent implements AfterViewChecked {
-  title = 'SnapCrap';
+  title = 'Peeper';
 
   storage: ImageBitmap[] = []; // Use this array as our database
 
