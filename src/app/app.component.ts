@@ -1,4 +1,6 @@
 import { AfterViewChecked, Component } from '@angular/core';
+import {VideoSnapService} from "../service/video-snap.service";
+import {firstValueFrom} from "rxjs";
 
 @Component({
   selector: 'app-root',
@@ -12,7 +14,7 @@ export class AppComponent implements AfterViewChecked {
   storage: ImageBitmap[] = []; // Use this array as our database
 
   stream: MediaStream | null = null;
-  captureInterval: number = 1;
+  captureInterval: ReturnType<typeof setTimeout>|undefined;
   startBtn: HTMLButtonElement | undefined;
   stopBtn: HTMLButtonElement | undefined;
   hideVid: HTMLInputElement | undefined;
@@ -20,6 +22,9 @@ export class AppComponent implements AfterViewChecked {
   videoElem: HTMLVideoElement | undefined;
   imageCountSpan: HTMLSpanElement | undefined;
   imagesDiv: HTMLDivElement | undefined;
+
+  constructor(private videoSnapService: VideoSnapService) {
+  }
 
   ngAfterViewChecked() {
     this.startBtn = document.querySelector("button#start")! as HTMLButtonElement;
@@ -31,25 +36,14 @@ export class AppComponent implements AfterViewChecked {
     this.imagesDiv = document.querySelector("div#images")! as HTMLDivElement;
   }
 
-  AppComponent() {
-
-
-    // show an error if not supported
-    if (typeof OffscreenCanvas === "undefined") {
-      const supportError = "OffscreenCanvas is not supported by your browser";
-      const errorSpan: HTMLElement = document.querySelector("span.error")!;
-      errorSpan.innerText = supportError;
-      console.error(supportError);
-    }
-
-    this.hideVid;
-
-  }
-
   hideVidClick() {
     if (!this.videoElem || !this.hideVid) return;
 
     this.videoElem.hidden = this.hideVid.checked;
+  }
+
+  async uploadData(result: string) {
+    await firstValueFrom(this.videoSnapService.createVideoSnap("1", result));
   }
 
   async startClick() {
@@ -62,8 +56,6 @@ export class AppComponent implements AfterViewChecked {
       console.log("video playing this.stream:", this.videoElem!.srcObject);
     this.videoElem.srcObject = this.stream;
 
-    const canvas = new OffscreenCanvas(1, 1); // needs an initial size
-    const ctx = canvas.getContext("2d")!;
 
     // (data check on the interval value) * that value is in seconds  * frame timestamps are in microseconds
     const intervalSecValue: number = parseInt(this.intervalSec.value);
@@ -72,22 +64,37 @@ export class AppComponent implements AfterViewChecked {
     clearInterval(this.captureInterval);
 
     this.captureInterval = setInterval(async () => {
+      const canvas = new OffscreenCanvas(1, 1); // needs an initial size
+      const ctx = canvas.getContext("2d")!;
+
       if (!this.videoElem || !this.imageCountSpan) return;
       // I am not assuming the source video has fixed dimensions
       canvas.height = this.videoElem.videoHeight;
       canvas.width = this.videoElem.videoWidth;
-      ctx.drawImage(this.videoElem, 0, 0);
-      const bitmap: ImageBitmap = canvas.transferToImageBitmap();
-      console.log(bitmap);
-      this.storage.push(bitmap);
+
+      const maxDimension = 128;
+      const reduction = Math.max(canvas.width, canvas.height)/maxDimension;
+      const dw = Math.floor(canvas.width / reduction);
+      const dh = Math.floor(canvas.height / reduction);
+      canvas.width = dw;
+      canvas.height = dh;
+      ctx.drawImage(this.videoElem, 0, 0, dw, dh);
+      canvas.convertToBlob().then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          reader.result && await this.uploadData(reader.result as string);
+          const bitmap: ImageBitmap = canvas.transferToImageBitmap();
+          this.storage.push(bitmap);
+        }
+        reader.readAsDataURL(blob);
+      });
       this.imageCountSpan.innerText = (parseInt(this.imageCountSpan.innerText) + 1).toString();
     }, interval);
 
     this.stopBtn.disabled = false;
   }
 
-
-  stopClick() {
+  async stopClick() {
     // stop capture
     clearInterval(this.captureInterval);
 
@@ -96,8 +103,7 @@ export class AppComponent implements AfterViewChecked {
       this.stream.getTracks().forEach((track) => track.stop());
     }
 
-    console.log("stored images");
-    this.showImages();
+    return this.showImages();
   }
 
 
