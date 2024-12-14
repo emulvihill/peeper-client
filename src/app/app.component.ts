@@ -2,17 +2,21 @@ import {Component, OnInit} from "@angular/core";
 import {VideoSnapService} from "../service/video-snap.service";
 import {firstValueFrom, Observable} from "rxjs";
 import {VideoSnap} from "../models/graphql-models";
+import {VideoSnapTileComponent} from "./snap-comparison-view/video-snap-tile/video-snap-tile.component";
+import {ComparisonService} from "../service/comparison.service";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.css"],
+  styleUrls: ["./app.component.scss"],
   standalone: false,
 })
 export class AppComponent implements OnInit {
   title = "Peeper";
 
-  storage: ImageBitmap[] = []; // Use this array as our database
+  storage: VideoSnap[] = []; // Use this array as our database
+  capturing: boolean = false;
+
 
   stream: MediaStream | null = null;
   captureInterval: ReturnType<typeof setTimeout> | undefined;
@@ -23,8 +27,9 @@ export class AppComponent implements OnInit {
   videoElem: HTMLVideoElement | undefined;
   imageCountSpan: HTMLSpanElement | undefined;
   imagesDiv: HTMLDivElement | undefined;
+  readyToCompare: boolean = false;
 
-  constructor(private videoSnapService: VideoSnapService) {
+  constructor(private videoSnapService: VideoSnapService, private comparisonService: ComparisonService) {
   }
 
   ngOnInit() {
@@ -50,7 +55,7 @@ export class AppComponent implements OnInit {
   async startClick() {
     if (!this.videoElem || !this.startBtn || !this.stopBtn || !this.intervalSec) return;
 
-    this.startBtn.disabled = true;
+    this.capturing = true;
 
     this.stream = await navigator.mediaDevices.getUserMedia({video: true});
     this.videoElem.onplaying = () =>
@@ -97,11 +102,10 @@ export class AppComponent implements OnInit {
 
             const snap = await firstValueFrom(this.uploadData(reader.result.toString()));
             console.info(`Image uploaded, ${snap.id} ${snap.date}`);
+            this.storage.push(snap);
           } else {
             console.error("No result bitmap to upload!");
           }
-          const bitmap: ImageBitmap = canvas.transferToImageBitmap();
-          this.storage.push(bitmap);
         };
         reader.readAsDataURL(blob);
       });
@@ -115,40 +119,23 @@ export class AppComponent implements OnInit {
   async stopClick() {
     // stop capture
     clearInterval(this.captureInterval);
+    this.capturing = false;
 
     // close the camera
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
     }
-
-    return this.showImages();
   }
 
+  compareSelected() {
+    this.comparisonService.compareVideoSnaps(this.storage[0], this.storage[1])
+      .subscribe(result => {
+        console.log(result);
+      });
+  }
 
-  // Display each image
-  async showImages() {
-    if (!this.imagesDiv) return;
-
-    const bitmap = this.storage.shift();
-    if (!bitmap) {
-      return;
-    }
-    const width = bitmap.width;
-    const height = bitmap.height;
-
-    console.log(bitmap);
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    // Common method
-    // const ctx = canvas.getContext("2d");
-    // ctx.drawImage(frame, 0, 0);
-
-    // less resource intensive method but no Safari support
-    const ctx = canvas.getContext("bitmaprenderer")!;
-    ctx.transferFromImageBitmap(bitmap);
-    this.imagesDiv.appendChild(canvas);
-
-    if (this.storage.length > 0) await this.showImages();
+  comparisonEdited(snapPair: [VideoSnap | undefined, VideoSnap | undefined]) {
+    this.readyToCompare = !!(snapPair[0] && snapPair[1]);
+    console.log(`comparisonEdited ${snapPair}, readyToCompare = ${(this.readyToCompare)}`);
   }
 }

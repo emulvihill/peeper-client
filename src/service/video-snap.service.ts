@@ -18,6 +18,7 @@ export class VideoSnapService {
         createVideoSnap(input: {feedId: $feedId, data: $data}) {
           id
           date
+          data
         }
       }
     `;

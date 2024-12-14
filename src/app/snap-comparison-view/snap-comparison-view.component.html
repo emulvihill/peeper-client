@@ -1,0 +1,5 @@
+<div class="wrapper"></div>
+@for (snap of snaps; track snap.id) {
+  <app-video-snap-tile [selectedAsBefore]="beforeSnap===snap"
+                       [selectedAsAfter]="afterSnap===snap" [snap]="snap" (onSelected)="onSnapSelected( $event)"/>
+}

@@ -1,7 +1,8 @@
 <label for="interval">Time between images in seconds: </label>
-<input id="interval" type="text" value="8" min="8" pattern="\d+">
+<input id="interval" type="text" value="1" min="1" pattern="\d+">
 <br>
-<button id="start" (click)="startClick()">Start</button>
+<button id="start" [disabled]="capturing" (click)="startClick()">Start Capturing</button>
+<button id="stop" [disabled]="!capturing" (click)="stopClick()">Stop Capturing</button>
 <br>
 <label for="hideVid" (click)="hideVidClick()">Hide video element: </label>
 <input id="hideVid" type="checkbox">
@@ -10,5 +11,9 @@
   Images captured: <span id="image_count">0</span>
 </p>
 <br>
-<button id="stop" disabled (click)="stopClick()">Stop & Show Images</button>
-<div id="images"></div>
+
+<button id="compare" [disabled]="!readyToCompare" [hidden]="capturing || storage.length === 0"
+        (click)="compareSelected()">Compare Images</button>
+
+<app-snap-comparison-view id="snapComparison" (edit)="comparisonEdited($event)" [snaps]="storage"></app-snap-comparison-view>
+
