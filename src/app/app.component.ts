@@ -17,7 +17,6 @@ export class AppComponent implements OnInit {
   storage: VideoSnap[] = []; // Use this array as our database
   capturing: boolean = false;
 
-
   stream: MediaStream | null = null;
   captureInterval: ReturnType<typeof setTimeout> | undefined;
   startBtn: HTMLButtonElement | undefined;
@@ -27,7 +26,7 @@ export class AppComponent implements OnInit {
   videoElem: HTMLVideoElement | undefined;
   imageCountSpan: HTMLSpanElement | undefined;
   imagesDiv: HTMLDivElement | undefined;
-  readyToCompare: boolean = false;
+  snapPair: [VideoSnap | undefined, VideoSnap | undefined] = [undefined, undefined];
 
   constructor(private videoSnapService: VideoSnapService, private comparisonService: ComparisonService) {
   }
@@ -128,14 +127,17 @@ export class AppComponent implements OnInit {
   }
 
   compareSelected() {
-    this.comparisonService.compareVideoSnaps(this.storage[0], this.storage[1])
-      .subscribe(result => {
-        console.log(result);
-      });
+
+    if (this.snapPair[0] && this.snapPair[1]) {
+      this.comparisonService.compareVideoSnaps(this.snapPair[0], this.snapPair[1])
+        .subscribe(result => {
+          console.log(result);
+        });
+    }
   }
 
   comparisonEdited(snapPair: [VideoSnap | undefined, VideoSnap | undefined]) {
-    this.readyToCompare = !!(snapPair[0] && snapPair[1]);
-    console.log(`comparisonEdited ${snapPair}, readyToCompare = ${(this.readyToCompare)}`);
+    this.snapPair = snapPair;
+    console.log(`comparisonEdited, comparing: ${snapPair}`);
   }
 }

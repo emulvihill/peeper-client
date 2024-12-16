@@ -12,7 +12,7 @@
 </p>
 <br>
 
-<button id="compare" [disabled]="!readyToCompare" [hidden]="capturing || storage.length === 0"
+<button id="compare" [disabled]="!(snapPair[0] && snapPair[1])" [hidden]="capturing || storage.length === 0"
         (click)="compareSelected()">Compare Images</button>
 
 <app-snap-comparison-view id="snapComparison" (edit)="comparisonEdited($event)" [snaps]="storage"></app-snap-comparison-view>

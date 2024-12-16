@@ -12,7 +12,6 @@ import {VideoSnapTileComponent} from "./video-snap-tile/video-snap-tile.componen
 })
 export class SnapComparisonViewComponent {
 
-  //snaps = input<VideoSnap[]>;
   @Input() snaps!: VideoSnap[];
 
   beforeSnap: VideoSnap | undefined;
